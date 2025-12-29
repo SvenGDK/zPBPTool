@@ -1,33 +1,63 @@
-name: Build
+name: Build zPBPTool
+
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - master
-
-env:
-  zig_version: 0.15.1
+    branches: [ "master" ]
 
 jobs:
   build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{matrix.os}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: mlugg/setup-zig@v2
-        with:
-          version: ${{ env.zig_version }}
-      - run: zig build
 
-  lint:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: mlugg/setup-zig@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+      - name: Install dependencies on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          xcode-select --install || true
+      - name: Install MinGW (gcc) on Windows
+        if: matrix.os == 'windows-latest'
+        uses: msys2/setup-msys2@v2
         with:
-          version: ${{ env.zig_version }}
-      - run: zig fmt --check *.zig
+          msystem: MINGW64
+          update: true
+      - name: Install gcc on Windows (MinGW)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pacman -S --noconfirm mingw-w64-x86_64-gcc
+
+      - name: Compile (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          gcc -std=c11 -O2 -o zPBPTool main.c
+          echo "Built zPBPTool (Linux) - $(./zPBPTool help 2>/dev/null || echo built)"
+
+      - name: Compile (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          clang -std=c11 -O2 -Wall -Wextra -o zPBPTool main.c
+          echo "Built zPBPTool (macOS)"
+
+      - name: Compile (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          gcc -std=c11 -O2 -o zPBPTool.exe main.c
+          echo "Built zPBPTool.exe (Windows)"
+
+      - name: List artifact
+        run: |
+          echo "Artifacts in workspace:"
+          ls -la
