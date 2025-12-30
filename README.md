@@ -1,6 +1,10 @@
 <h1 align="center">zPBPTool</h1>
 <p align="center">A cross-platform multi-tool for packing, unpacking, and analyzing PSP PBP files.</p>
 
+This fork is a C version of zPBPTool's zig version.
+- Smaller binaries & faster execution
+- No breaking changes in code language
+
 ## Why zPBPTool?
 This tool is meant to ship with the [Zig-PSP Toolchain](https://github.com/zPSP-Dev/Zig-PSP).
 
